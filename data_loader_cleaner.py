@@ -19,7 +19,7 @@ def get_ticker_data(user_data: pd.DataFrame) -> pd.DataFrame:
     """Fetch daily data for supplied tickers."""
     tickers = _extract_tickers(user_data)
     end_date = datetime.now()
-    start_date = end_date - timedelta(days=365 * 15)
+    start_date = end_date - timedelta(days=365 * 7)
 
     raw_data = yf.download(
         tickers=tickers,
