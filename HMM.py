@@ -4,6 +4,8 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from hmmlearn.hmm import GaussianHMM
 import matplotlib.pyplot as plt
+import plotly.graph_objs as go
+from plotly.subplots import make_subplots
 
 data = yf.download('SPY', start='2018-01-01', interval='1d', progress=False)
 
@@ -80,75 +82,53 @@ data = data.join(features['regime'], how='inner')
 data['regime'] = data['regime'].astype(int)
 
 
-state_stats = []
-for i in range(n_states):
-    state_data = data[data['regime'] == i]['ret']
-    state_stats.append({
-        'state': i,
-        'mean_return': state_data.mean(),
-        'volatility': state_data.std(),
-        'skewness': state_data.skew(),
-        'kurtosis': state_data.kurtosis()
-    })
-
-# Turn this into a DataFrame so we can inspect it
-state_stats_df = pd.DataFrame(state_stats)
-print(state_stats_df)
-
-
-# GRAPHING THE REGIMES
-
-# data already goes from 2018 onward, but let's ensure we filter NaNs out
-
-def main():
-    import matplotlib.pyplot as plt
-
-
+def get_market_regime_stats():
+    state_stats = []
+    for i in range(n_states):
+        state_data = data[data['regime'] == i]['ret']
+        state_stats.append({
+            'state': i,
+            'mean_return': state_data.mean(),
+            'volatility': state_data.std(),
+            'skewness': state_data.skew(),
+            'kurtosis': state_data.kurtosis()
+        })
+    state_stats_df = pd.DataFrame(state_stats)
     plot_df = data.dropna(subset=['price', 'regime']).copy()
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=plot_df.index, y=plot_df['price'],
+        mode='lines', name='SPY Price',
+        line=dict(color='lightgray', width=1)
+    ))
 
-    fig, ax = plt.subplots(figsize=(12, 6))
-
-    # Plot the price as a thin grey line in background
-    ax.plot(plot_df.index, plot_df['price'], color='lightgray', linewidth=1, label='SPY Price')
-
-    # Color map for regimes (support up to 4)
+    # Add Colored Dots for Regimes
     colors = ['red', 'green', 'blue', 'orange']
-
     for state in range(n_states):
         state_mask = plot_df['regime'] == state
-        ax.plot(
-            plot_df.index[state_mask],
-            plot_df['price'][state_mask],
-            '.',  # dots to make regime segments visible
-            color=colors[state],
-            markersize=3,
-            label=f'Regime {state}'
-        )
+        subset = plot_df[state_mask]
+        
+        fig.add_trace(go.Scatter(
+            x=subset.index, y=subset['price'],
+            mode='markers', name=f'Regime {state}',
+            marker=dict(color=colors[state % len(colors)], size=4)
+        ))
 
-    ax.set_title('SPY Price with Hidden Markov Regimes (2018–present)')
-    ax.set_xlabel('Date')
-    ax.set_ylabel('Price')
-    ax.legend(loc='upper left')
-    plt.tight_layout()
-    plt.show()
+    fig.update_layout(
+        title='SPY Market Regimes (Historical)',
+        xaxis_title='Date',
+        yaxis_title='Price',
+        template='plotly_white',
+        height=500
+    )
+
+    return fig, state_stats_df
 
 
-
-    # FINDING FEATURE PROFILES BY REGIME
-    features_with_regime = features.drop(columns='regime').join(data['regime'], how='inner')
-
-    regime_feature_means = features_with_regime.groupby('regime')[feature_columns].mean()
-    print(regime_feature_means)
-
-    fig, ax = plt.subplots(figsize=(12, 6))
-
-    regime_feature_means.T.plot(kind='bar', ax=ax)
-
-    ax.set_title('Average Feature Values by Regime')
-    ax.set_xlabel('Feature')
-    ax.set_ylabel('Mean value (raw scale)')
-    plt.xticks(rotation=45, ha='right')
-    plt.tight_layout()
-    plt.show()
 if __name__ == "__main__":
-    main()
+    fig, stats = get_market_regime_stats()
+    print(stats)
+    fig.show()
+
+

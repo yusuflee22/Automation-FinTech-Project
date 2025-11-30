@@ -1,5 +1,4 @@
 import pandas as pd
-import pandas as pd
 from datetime import datetime
 import yfinance as yf
 from datetime import timedelta
@@ -85,13 +84,13 @@ def plot_performance(perf_df, title="Portfolio vs Benchmarks"):
     return fig
 
 
-def run_demo():
+def run_demo(csv_path):
    # wrapper function
 
     print("Running Portfolio vs Benchmark comparison...")
 
     # Load positions
-    positions = load_positions(csv_path="sample_portfolio.csv")
+    positions = load_positions(csv_path)
 
     # Fetch price data for portfolio assets
     tickers = positions["ticker"].tolist()
@@ -116,7 +115,8 @@ def run_demo():
 
     # Plot
     fig = plot_performance(perf_df)
-    fig.show()
+    
+    return fig
 
 if __name__ == "__main__":
     run_demo()

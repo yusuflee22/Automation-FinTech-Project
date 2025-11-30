@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import yfinance as yf
-import seaborn as sns
+import plotly.express as px
 from data_pipeline import clean_price_data, fetch_prices, load_positions
 
 positions = load_positions("sample_portfolio.csv")
@@ -17,31 +17,48 @@ def fetch_sectors(tickers):
             sectors[t] = "Unknown"
     return sectors
 
-sectors = fetch_sectors(tickers)
-print("Ticker sectors:")
-for ticker, sector in sectors.items():
-    print(f"{ticker}: {sector}")
-
-# Pull price history and get the Close columns per ticker
-raw_prices = fetch_prices(tickers)
-clean_prices = clean_price_data(raw_prices)
-close_cols = [f"{t}_Close" for t in tickers]
-close_prices = clean_prices[close_cols]
-
-# Compute daily returns and drop the initial NaNs
-returns = close_prices.pct_change().dropna(how="all")
-if returns.empty:
-    raise ValueError("Not enough price data to compute returns.")
-
-# Correlation across tickers
-corr = returns.corr(method="pearson")
-print("Correlation matrix:")
-print(corr)
-
-# Heatmap
-sns.heatmap(corr, annot=True, fmt=".2f", cmap="coolwarm", center=0)
-plt.title("Portfolio Ticker Correlation Matrix")
-plt.tight_layout()
-plt.show()
 
 
+
+def analyze_correlations(csv_path):
+    positions = load_positions(csv_path)
+    tickers = positions["ticker"].tolist()
+
+    raw_prices = fetch_prices(tickers)
+    clean_prices = clean_price_data(raw_prices)
+
+    close_cols = [f"{t}_Close" for t in tickers]
+    close_prices = clean_prices[close_cols].copy()
+    close_prices.columns = [c.replace("_Close", "") for c in close_prices.columns]
+
+    returns = close_prices.pct_change().dropna(how="all")
+    if returns.empty:
+        raise ValueError("Not enough price data to compute returns.")
+
+
+    corr_matrix = returns.corr(method="pearson")
+
+    fig = px.imshow(
+        corr_matrix,
+        text_auto=".2f", # Displays the correlation numbers
+        aspect="auto",
+        color_continuous_scale="RdBu_r", # Red=High Corr, Blue=Inverse
+        zmin=-1, zmax=1,
+        title="Portfolio Correlation Matrix"
+    )
+    sectors = fetch_sectors(tickers)
+    
+    return fig, sectors
+
+
+
+if __name__ == "__main__":
+    
+    try:
+       
+        fig, sector_data = analyze_correlations("sample_portfolio.csv")
+        
+        print("Sectors found:", sector_data)
+        fig.show()
+    except Exception as e:
+        print(f"Error: {e}")

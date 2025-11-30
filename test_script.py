@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import datetime
 import plotly.graph_objs as go
+import numpy as np
 
 from data_pipeline import (
     load_positions,
@@ -21,16 +22,17 @@ from monte_carlo import (
     run_portfolio_monte_carlo,
     extract_hmm_return_params
 )
-import HMM
+
 from HMM import data as market_data
 
-from HMM import main as hmm_main
-from ret_vol_pe import main as metrics_main
-from performance_vs_benchmarks import run_demo as run_benchmarks
+from HMM import get_market_regime_stats
+from ret_vol_pe import analyze_risk_return_pe
+from performance_vs_benchmarks import run_demo
+from portfolio_corr import analyze_correlations
 
 
 
-def run_analytics(csv_path):
+def analyze_portfolio(csv_path):
     positions = load_positions(csv_path)
 
     tickers = positions["ticker"].tolist()
@@ -71,7 +73,7 @@ def run_analytics(csv_path):
         scaler=scaler,
         features=features,
         n_paths=200,
-        plot=True
+        plot=False
     )
 
     print("\nSimulation complete.")
@@ -85,15 +87,78 @@ def run_analytics(csv_path):
     print("HMM return stds:", return_stds)
 
 
+    # Portfolio correlation
+    fig_corr, sectors = analyze_correlations(csv_path)
+    fig_mc = go.Figure()
+    days_range = np.arange(sim_paths.shape[1])
+    for i in range(min(50, sim_paths.shape[0])):
+        fig_mc.add_trace(go.Scatter(
+            x=days_range, 
+            y=sim_paths[i],
+            mode='lines', 
+            line=dict(width=1),
+            showlegend=False
+        ))
+    mean_path = sim_paths.mean(axis=0)
+    
+    fig_mc.add_trace(go.Scatter(
+        x=days_range, 
+        y=mean_path,
+        mode='lines', 
+        name='Mean Projection',
+        line=dict(width=3, color='blue')
+    ))
+    
+    fig_mc.update_layout(
+        title="Monte Carlo Projection (1 Year Horizon)", 
+        template="plotly_white",
+        xaxis_title="Trading Days",
+        yaxis_title="Portfolio Value ($)",
+        hovermode="x"
+    )
+    return_means, _, _ = extract_hmm_return_params(model, features, scaler)
+    
+    # Calculate expected end value
+    expected_end_val = mean_path[-1]
+    roi = (expected_end_val - start_value) / start_value
+
+    metrics = {
+        "Start Value": f"${start_value:,.2f}",
+        "Current Regime": str(features["regime"].iloc[-1]),
+        "Est. Annual Return": f"{roi:.2%}",
+        "Sectors Detected": ", ".join(set(sectors.values()))
+    }
+
+
     print("\n=== Running Portfolio vs Benchmarks ===\n")
-    run_benchmarks()
+    fig_bench = run_demo(csv_path)
 
     print("\n=== Running HMM Regime Analysis ===\n")
-    hmm_main()
+    fig_hmm, hmm_stats = get_market_regime_stats()
 
     print("\n=== Running Return/Vol/PE Analysis ===\n")
-    metrics_main()
+    fig_fundamental, fund_df = analyze_risk_return_pe(csv_path)
 
     print("\nAll tasks complete.")
 
-run_analytics("sample_portfolio.csv")
+    return fig_mc, fig_corr, fig_bench, fig_fundamental, fig_hmm, metrics
+
+
+if __name__ == "__main__":
+    print("\n--- Starting Local Analysis ---")
+    try:
+        # Expecting 5 figures and 1 dict
+        # We unpack them into variables so we can show them
+        mc, corr, bench, hmm, fund, mets = analyze_portfolio("sample_portfolio.csv")
+        
+        print("\nMetrics Calculated:", mets)
+        print("\nDisplaying all 5 charts...")
+        
+        mc.show()
+        corr.show()
+        bench.show()
+        hmm.show()
+        fund.show()
+
+    except Exception as e:
+        print(f"\nCRITICAL ERROR: {e}")

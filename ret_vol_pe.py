@@ -29,40 +29,42 @@ def calculate_annual_ret(prices, lookback_days=252):
     return (latest_price / past_price) - 1
 
 
-metrics = []
-for ticker in tickers:
-    price_data = yf.download(
-        ticker,
-        start='2018-01-01',
-        interval='1d',
-        progress=False,
-        auto_adjust=False
-    )
 
-    close_prices = price_data['Close']
-    if isinstance(close_prices, pd.DataFrame):
-        close_prices = close_prices.squeeze("columns")
+def analyze_risk_return_pe(csv_path):
+    positions = load_positions(csv_path)
+    tickers = positions["ticker"].tolist()
 
-    hist_price = close_prices.dropna()
-    info = yf.Ticker(ticker).info
+    metrics = []
+    for ticker in tickers:
+        price_data = yf.download(
+            ticker,
+            start='2018-01-01',
+            interval='1d',
+            progress=False,
+            auto_adjust=False
+        )
 
-    vol_series = calculate_vol(hist_price)
-    current_vol = vol_series.iloc[-1]
-    annual_ret = calculate_annual_ret(hist_price)
+        close_prices = price_data['Close']
+        if isinstance(close_prices, pd.DataFrame):
+            close_prices = close_prices.squeeze("columns")
 
-    metrics.append({
-        'Ticker': ticker,
-        'Volatility': current_vol,
-        'Annual Return': annual_ret,
-        'PE Ratio': info.get('trailingPE', np.nan),
-    })
+        hist_price = close_prices.dropna()
+        info = yf.Ticker(ticker).info
 
-metrics_df = pd.DataFrame(metrics)
-print(metrics_df)
+        vol_series = calculate_vol(hist_price)
+        current_vol = vol_series.iloc[-1]
+        annual_ret = calculate_annual_ret(hist_price)
+
+        metrics.append({
+            'Ticker': ticker,
+            'Volatility': current_vol,
+            'Annual Return': annual_ret,
+            'PE Ratio': info.get('trailingPE', np.nan),
+        })
+
+    metrics_df = pd.DataFrame(metrics)
 
 # PLOT 3D SCATTER FOR PE-VOL-RET
-
-def main():
 
     fig = px.scatter_3d(
         metrics_df,
@@ -73,6 +75,14 @@ def main():
         hover_name='Ticker',
         title='Ticker Volatility vs Annual Return vs PE Ratio'
     )
-    fig.show()
+
+    return fig, metrics_df
+
 if __name__ == "__main__":
-    main()
+
+    try:
+        fig, df = analyze_risk_return_pe("sample_portfolio.csv")
+        print(df)
+        fig.show()
+    except Exception as e:
+        print(f"Local test failed: {e}")
