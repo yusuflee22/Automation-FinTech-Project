@@ -61,13 +61,18 @@ metrics_df = pd.DataFrame(metrics)
 print(metrics_df)
 
 # PLOT 3D SCATTER FOR PE-VOL-RET
-fig = px.scatter_3d(
-    metrics_df,
-    x='Annual Return',
-    y='Volatility',
-    z='PE Ratio',
-    color='Ticker',
-    hover_name='Ticker',
-    title='Ticker Volatility vs Annual Return vs PE Ratio'
-)
-fig.show()
+
+def main():
+
+    fig = px.scatter_3d(
+        metrics_df,
+        x='Annual Return',
+        y='Volatility',
+        z='PE Ratio',
+        color='Ticker',
+        hover_name='Ticker',
+        title='Ticker Volatility vs Annual Return vs PE Ratio'
+    )
+    fig.show()
+if __name__ == "__main__":
+    main()

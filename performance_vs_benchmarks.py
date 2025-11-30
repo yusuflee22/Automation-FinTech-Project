@@ -85,3 +85,39 @@ def plot_performance(perf_df, title="Portfolio vs Benchmarks"):
     return fig
 
 
+def run_demo():
+   # wrapper function
+
+    print("Running Portfolio vs Benchmark comparison...")
+
+    # Load positions
+    positions = load_positions(csv_path="sample_portfolio.csv")
+
+    # Fetch price data for portfolio assets
+    tickers = positions["ticker"].tolist()
+    raw_prices = fetch_prices(tickers)
+
+    # Clean it (drop NaNs, align, etc.)
+    clean_prices = clean_price_data(raw_prices)
+
+    # Build portfolio time series
+    portfolio_series = build_portfolio_series(
+        position_df=positions,
+        clean_prices=clean_prices
+    )
+
+    # Choose a start date
+    start_date = portfolio_series.index[0]
+
+    perf_df = compute_performance_comparison(
+        portfolio_series=portfolio_series,
+        start_date=start_date
+    )
+
+    # Plot
+    fig = plot_performance(perf_df)
+    fig.show()
+
+if __name__ == "__main__":
+    run_demo()
+

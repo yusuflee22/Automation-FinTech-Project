@@ -97,52 +97,58 @@ print(state_stats_df)
 
 
 # GRAPHING THE REGIMES
-import matplotlib.pyplot as plt
 
 # data already goes from 2018 onward, but let's ensure we filter NaNs out
-plot_df = data.dropna(subset=['price', 'regime']).copy()
 
-fig, ax = plt.subplots(figsize=(12, 6))
-
-# Plot the price as a thin grey line in background
-ax.plot(plot_df.index, plot_df['price'], color='lightgray', linewidth=1, label='SPY Price')
-
-# Color map for regimes (support up to 4)
-colors = ['red', 'green', 'blue', 'orange']
-
-for state in range(n_states):
-    state_mask = plot_df['regime'] == state
-    ax.plot(
-        plot_df.index[state_mask],
-        plot_df['price'][state_mask],
-        '.',  # dots to make regime segments visible
-        color=colors[state],
-        markersize=3,
-        label=f'Regime {state}'
-    )
-
-ax.set_title('SPY Price with Hidden Markov Regimes (2018–present)')
-ax.set_xlabel('Date')
-ax.set_ylabel('Price')
-ax.legend(loc='upper left')
-plt.tight_layout()
-plt.show()
+def main():
+    import matplotlib.pyplot as plt
 
 
+    plot_df = data.dropna(subset=['price', 'regime']).copy()
 
-# FINDING FEATURE PROFILES BY REGIME
-features_with_regime = features.drop(columns='regime').join(data['regime'], how='inner')
+    fig, ax = plt.subplots(figsize=(12, 6))
 
-regime_feature_means = features_with_regime.groupby('regime')[feature_columns].mean()
-print(regime_feature_means)
+    # Plot the price as a thin grey line in background
+    ax.plot(plot_df.index, plot_df['price'], color='lightgray', linewidth=1, label='SPY Price')
 
-fig, ax = plt.subplots(figsize=(12, 6))
+    # Color map for regimes (support up to 4)
+    colors = ['red', 'green', 'blue', 'orange']
 
-regime_feature_means.T.plot(kind='bar', ax=ax)
+    for state in range(n_states):
+        state_mask = plot_df['regime'] == state
+        ax.plot(
+            plot_df.index[state_mask],
+            plot_df['price'][state_mask],
+            '.',  # dots to make regime segments visible
+            color=colors[state],
+            markersize=3,
+            label=f'Regime {state}'
+        )
 
-ax.set_title('Average Feature Values by Regime')
-ax.set_xlabel('Feature')
-ax.set_ylabel('Mean value (raw scale)')
-plt.xticks(rotation=45, ha='right')
-plt.tight_layout()
-plt.show()
+    ax.set_title('SPY Price with Hidden Markov Regimes (2018–present)')
+    ax.set_xlabel('Date')
+    ax.set_ylabel('Price')
+    ax.legend(loc='upper left')
+    plt.tight_layout()
+    plt.show()
+
+
+
+    # FINDING FEATURE PROFILES BY REGIME
+    features_with_regime = features.drop(columns='regime').join(data['regime'], how='inner')
+
+    regime_feature_means = features_with_regime.groupby('regime')[feature_columns].mean()
+    print(regime_feature_means)
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+
+    regime_feature_means.T.plot(kind='bar', ax=ax)
+
+    ax.set_title('Average Feature Values by Regime')
+    ax.set_xlabel('Feature')
+    ax.set_ylabel('Mean value (raw scale)')
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+    plt.show()
+if __name__ == "__main__":
+    main()
