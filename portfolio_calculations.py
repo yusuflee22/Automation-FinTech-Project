@@ -58,6 +58,7 @@ def sharpe_ratio(mu_daily: float, sigma_daily: float, risk_free_daily: float = 0
     excess_return = (mu_daily - risk_free_daily) * TRADING_DAYS
     annual_sigma = sigma_daily * np.sqrt(TRADING_DAYS)
     return excess_return / annual_sigma if annual_sigma > 0 else np.nan
+
 if __name__ == "__main__":
     portfolio = load_portfolio("test_user_input.csv")
     stats = calculate_portfolio_statistics(portfolio)
