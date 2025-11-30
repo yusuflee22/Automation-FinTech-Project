@@ -14,7 +14,7 @@ from performance_vs_benchmarks import (
     plot_performance
 )
 
-csv_path = "test_user_input.csv"
+csv_path = "sample_portfolio.csv"
 positions = load_positions(csv_path)
 
 tickers = positions["ticker"].tolist()
