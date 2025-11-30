@@ -22,43 +22,45 @@ from monte_carlo import (
     extract_hmm_return_params
 )
 import HMM
-from HMM import data
+from HMM import data as market_data
 
-csv_path = "test_user_input.csv"
+
+
+
 csv_path = "sample_portfolio.csv"
 positions = load_positions(csv_path)
 
 tickers = positions["ticker"].tolist()
+
 raw_prices = fetch_prices(tickers)
 clean_prices = clean_price_data(raw_prices)
 
 portfolio_series = build_portfolio_series(positions, clean_prices)
-default_benchmarks = ["SPY","VOO","QQQ","DIA"]
-start_date = portfolio_series.index[0]
 
 
 full_df, features, feature_cols = compute_portfolio_features(portfolio_series)
-market_regimes = data[['regime']].rename(columns={'regime': 'regime_market'})
-features = features.merge(market_regimes, left_index=True, right_index=True, how='left')
 
+# Ensure market_data has a datetime index and a `regime` column
+market_regimes = market_data[['regime']].rename(columns={'regime': 'regime_market'})
+
+# Align market regimes to portfolio feature dates
+features = features.merge(market_regimes, left_index=True, right_index=True, how='left')
 features = features.dropna()
 
-
-
-print("Feature sample:")
+print("\nFeature sample:")
 print(features.head())
 
 
 model, scaler, features_w_states = build_portfolio_hmm(features)
 features["regime"] = features_w_states["regime"]
 
-print("State counts:")
-print(features_w_states["regime"].value_counts())
-
+print("\nState counts:")
+print(features["regime"].value_counts())
 
 regime_df = merge_regimes_back(full_df, features_w_states)
 
 start_value = portfolio_series["Portfolio_Value"].iloc[-1]
+
 sim_paths = run_portfolio_monte_carlo(
     start_value=start_value,
     days=252,
@@ -69,12 +71,27 @@ sim_paths = run_portfolio_monte_carlo(
     plot=True
 )
 
-print("Simulation complete.")
+print("\nSimulation complete.")
 
 
-print("Raw return sample:", full_df["ret"].head())
+print("\nRaw return sample:", full_df["ret"].head())
 print("Feature return sample:", features["ret"].head())
 
 return_means, return_stds, _ = extract_hmm_return_params(model, features, scaler)
-print("HMM return means:", return_means)
+print("\nHMM return means:", return_means)
 print("HMM return stds:", return_stds)
+
+from HMM import main as hmm_main
+from ret_vol_pe import main as metrics_main
+from performance_vs_benchmarks import run_demo as run_benchmarks
+
+print("\n=== Running Portfolio vs Benchmarks ===\n")
+run_benchmarks()
+
+print("\n=== Running HMM Regime Analysis ===\n")
+hmm_main()
+
+print("\n=== Running Return/Vol/PE Analysis ===\n")
+metrics_main()
+
+print("\nAll tasks complete.")
