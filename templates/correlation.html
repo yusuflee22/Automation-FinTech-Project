@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Correlation | Horizon Analytics{% endblock %}
+{% set active_page = 'correlation' %}
+
+{% block content %}
+<section class="card">
+    <h2>Correlation & Diversification</h2>
+    {% if correlation %}
+        <div class="image-grid single">
+            <img src="{{ url_for('static', filename=correlation.fig_path) }}" alt="Correlation heatmap">
+        </div>
+        {% if correlation.sectors %}
+        <div class="pill-row">
+            {% for ticker, sector in correlation.sectors.items() %}
+                <span class="pill">{{ ticker }}: {{ sector }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <p class="muted">Use this view to gauge clustering risk and identify diversification gaps.</p>
+    {% else %}
+        <p>No correlation results yet. Submit a portfolio on the Home page.</p>
+    {% endif %}
+</section>
+{% endblock %}

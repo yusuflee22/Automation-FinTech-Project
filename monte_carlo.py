@@ -189,7 +189,7 @@ def simulate_many_paths(
 
     return np.array(all_paths)
 
-def plot_monte_carlo_paths(mc_paths, dates=None):
+def plot_monte_carlo_paths(mc_paths, dates=None, show=True):
    
     n_sims, n_steps = mc_paths.shape
 
@@ -232,7 +232,9 @@ def plot_monte_carlo_paths(mc_paths, dates=None):
         height=600,
     )
 
-    fig.show()
+    if show:
+        fig.show()
+    return fig
 
 
 
@@ -266,4 +268,3 @@ def run_portfolio_monte_carlo(
     if plot:
         plot_monte_carlo_paths(mc_paths)
     return mc_paths
-

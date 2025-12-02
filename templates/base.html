@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Horizon Analytics{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page">
+        <header class="top-header">
+            <div class="brand">Horizon Analytics</div>
+            <nav class="nav-bar">
+                <a class="nav-link {% if active_page == 'home' %}active{% endif %}" href="{{ url_for('index') }}">Home</a>
+                <a class="nav-link {% if active_page == 'hmm' %}active{% endif %}" href="{{ url_for('hmm_regimes') }}">HMM Regime Analysis</a>
+                <a class="nav-link {% if active_page == 'var' %}active{% endif %}" href="{{ url_for('var_view') }}">VaR Analysis</a>
+                <a class="nav-link {% if active_page == 'monte' %}active{% endif %}" href="{{ url_for('monte_carlo_view') }}">Monte Carlo Simulation</a>
+                <a class="nav-link {% if active_page == 'correlation' %}active{% endif %}" href="{{ url_for('correlation_view') }}">Correlation / Diversification</a>
+                <a class="nav-link {% if active_page == 'factors' %}active{% endif %}" href="{{ url_for('factor_view') }}">Return / Vol / PE (3D)</a>
+            </nav>
+        </header>
+
+        <main class="content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-container">
+                        {% for category, message in messages %}
+                            <div class="flash {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

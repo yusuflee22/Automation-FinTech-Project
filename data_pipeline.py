@@ -5,15 +5,18 @@ import yfinance as yf
 
 
 
-def load_positions(csv_path: str):
+def load_positions(csv_path_or_df):
     """
-    Load the user's CSV file.
+    Load the user's positions from a CSV path or an in-memory DataFrame.
     Expected columns: ticker, shares
     Returns a cleaned DataFrame with:
         - uppercase tickers
         - numeric share counts
     """
-    df = pd.read_csv(csv_path)
+    if isinstance(csv_path_or_df, pd.DataFrame):
+        df = csv_path_or_df.copy()
+    else:
+        df = pd.read_csv(csv_path_or_df)
     df.columns = [c.strip().lower() for c in df.columns]
 
     if not {"ticker", "shares"} <= set(df.columns):
@@ -134,4 +137,3 @@ def compute_portfolio_returns(portfolio_value):
     returns = portfolio_value.pct_change().fillna(0)
     returns.name = "Portfolio_Return"
     return returns
-

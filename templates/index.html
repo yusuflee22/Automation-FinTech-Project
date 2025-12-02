@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Home | Horizon Analytics{% endblock %}
+{% set active_page = 'home' %}
+
+{% block content %}
+<section class="card hero">
+    <div>
+        <h1>Portfolio Control Center</h1>
+        <p>Enter tickers and shares (or upload CSV) to run HMM regimes, VaR, Monte Carlo, and correlation insights.</p>
+    </div>
+</section>
+
+<section class="card">
+    <h2>Input Portfolio</h2>
+    <form method="POST" enctype="multipart/form-data" class="portfolio-form">
+        <div class="form-grid">
+            <div>
+                <label for="ticker" class="label">Tickers</label>
+            </div>
+            <div>
+                <label for="shares" class="label">Shares</label>
+            </div>
+        </div>
+        <table class="input-table" id="portfolio-table">
+            <tbody>
+                {% for i in range(6) %}
+                <tr>
+                    <td><input name="ticker" type="text" placeholder="e.g., AAPL" autocomplete="off"></td>
+                    <td><input name="shares" type="number" step="any" placeholder="e.g., 10"></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="actions">
+            <button type="button" class="btn ghost" id="add-row">+ Add Row</button>
+        </div>
+
+        <div class="upload-area">
+            <label for="portfolio_csv" class="label">Or upload CSV (columns: ticker, shares)</label>
+            <input type="file" id="portfolio_csv" name="portfolio_csv" accept=".csv">
+        </div>
+
+        <div class="actions">
+            <button type="submit" class="btn primary">Run Analytics</button>
+        </div>
+    </form>
+</section>
+
+{% if results %}
+<section class="card">
+    <h2>Latest Snapshot</h2>
+    <div class="metrics">
+        <div class="metric">
+            <div class="metric-label">Portfolio Value</div>
+            <div class="metric-value">${{ "{:,.2f}".format(results.latest_value) }}</div>
+        </div>
+        {% if results.var %}
+        <div class="metric">
+            <div class="metric-label">1-Day VaR (95%)</div>
+            <div class="metric-value">${{ "{:,.0f}".format(results.var.var_1d) if results.var.var_1d is not none else "N/A" }}</div>
+        </div>
+        {% endif %}
+        {% if results.hmm %}
+        <div class="metric">
+            <div class="metric-label">Current Regime</div>
+            <div class="metric-value">Regime {{ results.hmm.current_regime }}</div>
+        </div>
+        {% endif %}
+        {% if results.monte_carlo %}
+        <div class="metric">
+            <div class="metric-label">Projected 1Y Mean</div>
+            <div class="metric-value">${{ "{:,.0f}".format(results.monte_carlo.expected_end_value) }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="links">
+        <a class="btn link" href="{{ url_for('hmm_regimes') }}">View HMM</a>
+        <a class="btn link" href="{{ url_for('var_view') }}">View VaR</a>
+        <a class="btn link" href="{{ url_for('monte_carlo_view') }}">View Monte Carlo</a>
+        <a class="btn link" href="{{ url_for('correlation_view') }}">View Correlation</a>
+    </div>
+
+    {% if results.warnings %}
+    <div class="warning">
+        <strong>Warnings:</strong>
+        <ul>
+            {% for w in results.warnings %}
+            <li>{{ w }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+
+<script>
+const tableBody = document.querySelector("#portfolio-table tbody");
+const addRowBtn = document.getElementById("add-row");
+if (addRowBtn) {
+    addRowBtn.addEventListener("click", () => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td><input name="ticker" type="text" placeholder="Ticker"></td>
+            <td><input name="shares" type="number" step="any" placeholder="Shares"></td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+</script>
+{% endblock %}

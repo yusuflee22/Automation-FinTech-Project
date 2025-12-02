@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}VaR Analysis | Horizon Analytics{% endblock %}
+{% set active_page = 'var' %}
+
+{% block content %}
+<section class="card">
+    <h2>Value at Risk</h2>
+    {% if var %}
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-label">1-Day VaR (95%)</div>
+                <div class="metric-value">${{ "{:,.0f}".format(var.var_1d) }}</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">10-Day VaR (scaled)</div>
+                <div class="metric-value">${{ "{:,.0f}".format(var.var_10d) }}</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Expected Shortfall</div>
+                <div class="metric-value">${{ "{:,.0f}".format(var.expected_shortfall) if var.expected_shortfall==var.expected_shortfall else "N/A" }}</div>
+            </div>
+        </div>
+        <div class="image-grid single">
+            <img src="{{ url_for('static', filename=var.fig_path) }}" alt="VaR histogram">
+        </div>
+    {% else %}
+        <p>No VaR results yet. Submit a portfolio on the Home page.</p>
+    {% endif %}
+</section>
+{% endblock %}

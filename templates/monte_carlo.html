@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Monte Carlo | Horizon Analytics{% endblock %}
+{% set active_page = 'monte' %}
+
+{% block content %}
+<section class="card">
+    <h2>Monte Carlo Simulation</h2>
+    {% if mc %}
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-label">Projected Mean (1Y)</div>
+                <div class="metric-value">${{ "{:,.0f}".format(mc.expected_end_value) }}</div>
+            </div>
+            {% if latest_value %}
+            <div class="metric">
+                <div class="metric-label">ROI vs Today</div>
+                <div class="metric-value">
+                    {% set roi = (mc.expected_end_value - latest_value) / latest_value %}
+                    {{ "{:.2%}".format(roi) }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="image-grid single">
+            <img src="{{ url_for('static', filename=mc.fig_path) }}" alt="Monte Carlo projection">
+        </div>
+        <p class="muted">Simulation based on HMM-driven return regimes and {{ mc.paths.shape[0] if mc.paths is defined else 'multiple' }} paths.</p>
+    {% else %}
+        <p>No simulations yet. Submit a portfolio on the Home page.</p>
+    {% endif %}
+</section>
+{% endblock %}

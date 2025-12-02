@@ -4,4 +4,6 @@ numpy
 pandas
 plotly
 scikit-learn
+Flask
 yfinance
+seaborn

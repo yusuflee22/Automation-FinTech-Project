@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Return / Vol / PE | Horizon Analytics{% endblock %}
+{% set active_page = 'factors' %}
+
+{% block content %}
+<section class="card">
+    <h2>Return / Volatility / PE (3D)</h2>
+    {% if factors %}
+        <div class="image-grid single">
+            <img src="{{ url_for('static', filename=factors.fig_path) }}" alt="Return Volatility PE 3D scatter">
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ticker</th>
+                        <th>Annual Return</th>
+                        <th>Volatility</th>
+                        <th>PE Ratio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for _, row in factors.metrics.iterrows() %}
+                    <tr>
+                        <td>{{ row['Ticker'] }}</td>
+                        <td>{{ "{:.2%}".format(row['Annual Return']) if row['Annual Return'] == row['Annual Return'] else "N/A" }}</td>
+                        <td>{{ "{:.2%}".format(row['Volatility']) if row['Volatility'] == row['Volatility'] else "N/A" }}</td>
+                        <td>{{ "{:.2f}".format(row['PE Ratio']) if row['PE Ratio'] == row['PE Ratio'] else "N/A" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>No factor view yet. Submit a portfolio on the Home page.</p>
+    {% endif %}
+</section>
+{% endblock %}

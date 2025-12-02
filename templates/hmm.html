@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}HMM Regimes | Horizon Analytics{% endblock %}
+{% set active_page = 'hmm' %}
+
+{% block content %}
+<section class="card">
+    <h2>HMM Regime Analysis</h2>
+    {% if hmm %}
+        <p>Current detected portfolio regime: <strong>Regime {{ hmm.current_regime }}</strong></p>
+        <div class="image-grid">
+            <div>
+                <h3>Portfolio Regimes</h3>
+                <img src="{{ url_for('static', filename=hmm.portfolio_plot) }}" alt="Portfolio regimes chart">
+            </div>
+            <div>
+                <h3>Market Regimes (SPY)</h3>
+                <img src="{{ url_for('static', filename=hmm.market_plot) }}" alt="Market regimes chart">
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <h3>Portfolio Regime Stats</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Regime</th>
+                        <th>Mean Return</th>
+                        <th>Volatility</th>
+                        <th>Skewness</th>
+                        <th>Kurtosis</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for _, row in hmm.summary.iterrows() %}
+                    <tr>
+                        <td>{{ row.regime }}</td>
+                        <td>{{ "{:.4f}".format(row['mean_return']) }}</td>
+                        <td>{{ "{:.4f}".format(row['volatility']) }}</td>
+                        <td>{{ "{:.4f}".format(row['skewness']) }}</td>
+                        <td>{{ "{:.4f}".format(row['kurtosis']) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if benchmarks %}
+        <div class="image-grid single">
+            <div>
+                <h3>Performance vs Benchmarks</h3>
+                <img src="{{ url_for('static', filename=benchmarks.fig_path) }}" alt="Portfolio vs benchmarks">
+            </div>
+        </div>
+        {% endif %}
+    {% else %}
+        <p>No analysis yet. Submit a portfolio on the Home page.</p>
+    {% endif %}
+</section>
+{% endblock %}

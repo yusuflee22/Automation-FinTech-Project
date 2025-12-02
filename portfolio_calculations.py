@@ -2,6 +2,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from data_loader_cleaner import get_ticker_data, clean_ticker_data
+
 TRADING_DAYS = 252
 def load_portfolio(csv_path: str) -> pd.DataFrame:
    
